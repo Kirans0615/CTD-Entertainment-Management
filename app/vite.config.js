@@ -5,7 +5,7 @@ export default defineConfig({
   base: '/CTD-Entertainment-Management/',
   plugins: [react()],
   build: {
-    outDir: 'dist',
+    outDir: '../dist',
     emptyOutDir: true,
   },
 })

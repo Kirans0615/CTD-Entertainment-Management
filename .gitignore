@@ -1,9 +1,25 @@
+# Dependencies
 node_modules/
+app/node_modules/
+
+# Build intermediary (not committed — deploy copies to root instead)
 dist/
+app/dist/
+
+# Local env / system
 .DS_Store
 *.local
 .env
 .env.*
+.vite/
+app/.vite/
 
-# Built output at root is intentionally committed for GitHub Pages.
-# Do NOT add index.html, assets/, or 404.html here.
+# Stale root-level source files (source now lives in app/)
+/src/
+/vite.config.js
+/tailwind.config.js
+/postcss.config.js
+/package-lock.json
+
+# Built output at root IS committed for GitHub Pages — do NOT ignore:
+# index.html, assets/, .nojekyll, 404.html
