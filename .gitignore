@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+.env
+.env.*
+
+# Built output at root is intentionally committed for GitHub Pages.
+# Do NOT add index.html, assets/, or 404.html here.

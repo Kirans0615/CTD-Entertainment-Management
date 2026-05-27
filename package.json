@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "vite build && cp -r dist/. . && echo 'Built files copied to root'"
   },
   "dependencies": {
     "framer-motion": "^11.3.0",
