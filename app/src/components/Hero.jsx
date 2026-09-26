@@ -1,25 +1,32 @@
-import { useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { useEffect, useRef } from 'react'
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
 import { ChevronDown, Sparkles } from 'lucide-react'
 
 const LOGO = 'https://raw.githubusercontent.com/Kirans0615/CTD-Entertainment-Management/main/mainlogo.jpg'
 
-function Orb({ style, animate, duration, delay = 0 }) {
-  return (
-    <motion.div
-      className="absolute rounded-full pointer-events-none"
-      style={style}
-      animate={animate}
-      transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut', repeatType: 'mirror' }}
-    />
-  )
-}
+const VIDEO = `${import.meta.env.BASE_URL}media/hero-concert.mp4`
+const POSTER = `${import.meta.env.BASE_URL}media/hero-concert-poster.jpg`
 
 export default function Hero() {
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
   const yContent = useTransform(scrollYProgress, [0, 1], ['0%', '35%'])
   const opacity = useTransform(scrollYProgress, [0, 0.65], [1, 0])
+  const videoScale = useTransform(scrollYProgress, [0, 1], [1.05, 1.2])
+  const videoRef = useRef(null)
+  const reduceMotion = useReducedMotion()
+
+  // Respect reduced-motion: hold on the first frame instead of playing.
+  useEffect(() => {
+    const v = videoRef.current
+    if (!v) return
+    if (reduceMotion) {
+      v.pause()
+    } else {
+      v.playbackRate = 0.85 // slightly slowed for a more cinematic feel
+      v.play().catch(() => {})
+    }
+  }, [reduceMotion])
 
   const scrollToAbout = () => {
     document.querySelector('#about')?.scrollIntoView({ behavior: 'smooth' })
@@ -31,58 +38,50 @@ export default function Hero() {
       ref={ref}
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-ctd-black"
     >
-      {/* Ambient orbs */}
-      <Orb
-        style={{
-          width: 800,
-          height: 800,
-          background: 'radial-gradient(circle, rgba(201,168,76,0.18) 0%, transparent 65%)',
-          top: '-20%',
-          left: '-20%',
-          filter: 'blur(1px)',
-        }}
-        animate={{ x: [0, 40, 0], y: [0, -30, 0], scale: [1, 1.1, 1] }}
-        duration={14}
-      />
-      <Orb
-        style={{
-          width: 600,
-          height: 600,
-          background: 'radial-gradient(circle, rgba(212,114,42,0.14) 0%, transparent 65%)',
-          bottom: '-10%',
-          right: '-10%',
-          filter: 'blur(1px)',
-        }}
-        animate={{ x: [0, -30, 0], y: [0, 40, 0], scale: [1, 1.15, 1] }}
-        duration={11}
-        delay={2}
-      />
-      <Orb
-        style={{
-          width: 400,
-          height: 400,
-          background: 'radial-gradient(circle, rgba(201,168,76,0.1) 0%, transparent 70%)',
-          top: '40%',
-          left: '60%',
-          filter: 'blur(2px)',
-        }}
-        animate={{ x: [0, 20, 0], y: [0, -50, 0], scale: [1, 1.05, 1] }}
-        duration={9}
-        delay={4}
-      />
+      {/* Background video — autoplays muted + looped; poster shows until it can play */}
+      <motion.div style={{ scale: videoScale }} className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster={POSTER}
+          disablePictureInPicture
+          disableRemotePlayback
+          className="h-full w-full object-cover transform-gpu"
+        >
+          <source src={VIDEO} type="video/mp4" />
+        </video>
+      </motion.div>
 
-      {/* Subtle grid */}
+      {/* Overlay: dark wash for legibility, gold/warm stage-light tint, then vignette + fade into the next section */}
+      <div className="absolute inset-0 bg-ctd-black/85 pointer-events-none" />
       <div
-        className="absolute inset-0 opacity-[0.025] pointer-events-none"
+        className="absolute inset-0 pointer-events-none mix-blend-soft-light"
         style={{
-          backgroundImage:
-            'linear-gradient(rgba(201,168,76,1) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,1) 1px, transparent 1px)',
-          backgroundSize: '80px 80px',
+          background:
+            'radial-gradient(ellipse at 20% 0%, rgba(201,168,76,0.55) 0%, transparent 55%), radial-gradient(ellipse at 85% 100%, rgba(212,114,42,0.45) 0%, transparent 55%)',
         }}
       />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(8,8,8,0.85)_100%)] pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-ctd-black pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-ctd-black/70 to-transparent pointer-events-none" />
 
-      {/* Vignette */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,#080808_100%)] pointer-events-none" />
+      {/* Soft warm bloom behind the headline — lifts the centre without brightening the video */}
+      <div
+        className="absolute left-1/2 top-[46%] h-[70vh] w-[90vw] max-w-[1100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at center, rgba(201,168,76,0.13) 0%, transparent 65%)' }}
+      />
+
+      {/* Film grain */}
+      <div
+        className="absolute inset-0 opacity-[0.07] mix-blend-overlay pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+        }}
+      />
 
       {/* Content */}
       <motion.div
@@ -124,26 +123,36 @@ export default function Hero() {
         </motion.div>
 
         {/* Main heading */}
-        <motion.h1
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="display-heading text-5xl sm:text-7xl md:text-[5.5rem] text-white mb-6"
-        >
-          Amplifying{' '}
-          <em className="not-italic text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-light to-warm">
-            Diverse Voices
-          </em>
-          <br />
-          <span className="text-white/90">in Music &amp; Arts</span>
-        </motion.h1>
+        <h1 className="display-heading text-5xl sm:text-7xl md:text-[5.5rem] text-white mb-6 [text-shadow:0_4px_40px_rgba(0,0,0,0.6)]">
+          {[
+            { words: ['Amplifying'], cls: '' },
+            { words: ['Diverse', 'Voices'], cls: 'text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-light to-warm' },
+            { words: ['in', 'Music', '&', 'Arts'], cls: 'text-white/90', br: true },
+          ].map((group, gi) => (
+            <span key={gi}>
+              {group.br && <br />}
+              {group.words.map((w, wi) => (
+                <motion.span
+                  key={w}
+                  className={`inline-block ${group.cls}`}
+                  initial={{ opacity: 0, y: 36, filter: 'blur(10px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  transition={{ duration: 0.9, delay: 0.4 + (gi * 3 + wi) * 0.09, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {w}
+                  {(wi < group.words.length - 1 || gi === 0) && '\u00A0'}
+                </motion.span>
+              ))}
+            </span>
+          ))}
+        </h1>
 
         {/* Subheadline */}
         <motion.p
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="font-body text-lg md:text-xl text-white/55 max-w-2xl mx-auto mb-12 leading-relaxed"
+          className="font-body text-lg md:text-xl text-white/75 max-w-2xl [text-shadow:0_2px_20px_rgba(0,0,0,0.7)] mx-auto mb-12 leading-relaxed"
         >
           A multifaceted arts and entertainment management company creating diversity among the music masses —
           managing talent and creative projects across every level of the industry.
@@ -170,10 +179,13 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 1.2 }}
-          className="mt-16 flex items-center justify-center gap-8 text-white/30"
+          className="mt-16 flex flex-wrap items-center justify-center gap-y-3 text-white/60"
         >
-          {['50+ Artists', '15+ Years', '200+ Projects', '30+ Cities'].map((stat) => (
-            <div key={stat} className="text-xs font-body tracking-wider uppercase">{stat}</div>
+          {['50+ Artists', '15+ Years', '200+ Projects', '30+ Cities'].map((stat, i) => (
+            <div key={stat} className="flex items-center">
+              {i > 0 && <span className="mx-5 sm:mx-7 h-3 w-px bg-gold/40" />}
+              <span className="text-[11px] font-body tracking-[0.22em] uppercase">{stat}</span>
+            </div>
           ))}
         </motion.div>
       </motion.div>
